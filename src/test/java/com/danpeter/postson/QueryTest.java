@@ -15,14 +15,14 @@ public class QueryTest {
 
 
     public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterström", new Address("Vintervägen", "17777"));
-    private JsonDatastore datastore;
+    private JdbcDatastore datastore;
     private Connection connection;
 
     @Before
     public void setUp() throws Exception {
         connection = DriverManager.getConnection(
                 "jdbc:postgresql://localhost:5432/test", "test", "test");
-        datastore = new JsonDatastore(connection
+        datastore = new JdbcDatastore(connection
         );
     }
 
@@ -54,7 +54,7 @@ public class QueryTest {
         assertThat(systemUsers.size(), is(1));
     }
 
-    @Test(expected = JsonDatastoreException.class)
+    @Test(expected = DatastoreException.class)
     public void idIsUnique() throws Exception {
         datastore.save(DAN_P);
         datastore.save(DAN_P);

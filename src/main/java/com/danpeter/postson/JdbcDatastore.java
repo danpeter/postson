@@ -11,11 +11,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-public class JsonDatastore implements Datastore {
+public class JdbcDatastore implements Datastore {
     final Connection connection;
     final Gson gson;
 
-    public JsonDatastore(Connection connection) {
+    public JdbcDatastore(Connection connection) {
         this.connection = connection;
         this.gson = new Gson();
     }
@@ -28,7 +28,7 @@ public class JsonDatastore implements Datastore {
             preparedStatement.setString(1, json);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            throw new JsonDatastoreException(e);
+            throw new DatastoreException(e);
         }
     }
 
@@ -37,6 +37,7 @@ public class JsonDatastore implements Datastore {
         return new Query<>(type);
     }
 
+    @Override
     public <T> Optional<T> get(Class<T> type, String id) {
         //TODO: Id needs to be an object
          return createQuery(type).field("id").equal(id).singleResult();
@@ -66,7 +67,7 @@ public class JsonDatastore implements Datastore {
                 }
                 return result;
             } catch (SQLException e) {
-                throw new JsonDatastoreException(e);
+                throw new DatastoreException(e);
             }
         }
 
@@ -74,7 +75,7 @@ public class JsonDatastore implements Datastore {
             //TODO: Optimize by doing count first, fail if greater than 1
             List<T> result = asList();
             if (result.size() > 1) {
-                throw new JsonDatastoreException("No unique result.");
+                throw new DatastoreException("No unique result.");
             }
             return result.stream().findAny();
         }
@@ -86,7 +87,7 @@ public class JsonDatastore implements Datastore {
                 resultSet.next();
                 return resultSet.getInt("total");
             } catch (SQLException e) {
-                throw new JsonDatastoreException(e);
+                throw new DatastoreException(e);
             }
         }
 
