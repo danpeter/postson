@@ -5,18 +5,20 @@ import com.google.common.base.CaseFormat;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 public class JdbcDatastore implements Datastore {
     final Connection connection;
     final Gson gson;
 
-    public JdbcDatastore(Connection connection) {
-        this.connection = connection;
+    public JdbcDatastore(String host, String port, String databaseName, String userName, String password) {
+        try {
+            this.connection = DriverManager.getConnection(
+                    String.format("jdbc:postgresql://%s:%s/%s", host, port, databaseName), userName, password);
+        } catch (SQLException e) {
+            throw new DatastoreException("Could not connect to underlying data source.", e);
+        }
         this.gson = new Gson();
     }
 
@@ -119,7 +121,7 @@ public class JdbcDatastore implements Datastore {
 
             private <V> void addQuery(JsonObject queryObject, List<String> fields, V value) {
                 if (fields.size() == 1) {
-                     queryObject.add(fields.get(0), gson.toJsonTree(value));
+                    queryObject.add(fields.get(0), gson.toJsonTree(value));
                 } else {
                     JsonObject nextQueryObject = new JsonObject();
                     addQuery(nextQueryObject, fields.subList(1, fields.size()), value);

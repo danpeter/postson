@@ -21,10 +21,9 @@ public class QueryTest {
 
     @Before
     public void setUp() throws Exception {
+        datastore = new JdbcDatastore("localhost", "5432", "test", "test", "test");
         connection = DriverManager.getConnection(
                 "jdbc:postgresql://localhost:5432/test", "test", "test");
-        datastore = new JdbcDatastore(connection
-        );
     }
 
     @After
