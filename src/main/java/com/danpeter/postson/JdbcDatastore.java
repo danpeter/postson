@@ -37,7 +37,7 @@ public class JdbcDatastore implements Datastore {
 
     @Override
     public <T> Query<T> createQuery(Class<T> type) {
-        return new Query<>(type);
+        return new JdbcQuery<>(type);
     }
 
     @Override
@@ -50,20 +50,22 @@ public class JdbcDatastore implements Datastore {
         return createQuery(type).field("id").equal(id).delete() > 0;
     }
 
-    public class Query<T> {
+    public class JdbcQuery<T> implements Query<T> {
         private final Class<T> type;
-        private JsonObject queryObject = new JsonObject();
-        private String tableName;
+        private final JsonObject queryObject = new JsonObject();
+        private final String tableName;
 
-        public Query(Class<T> type) {
+        public JdbcQuery(Class<T> type) {
             this.type = type;
             this.tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, type.getSimpleName());
         }
 
-        public FieldQuery field(String field) {
-            return new FieldQuery(field);
+        @Override
+        public FieldQuery<T> field(String field) {
+            return new JdbcFieldQuery(field);
         }
 
+        @Override
         public List<T> asList() {
             try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT id, data FROM " + tableName + " WHERE data @> ?::JSONB")) {
                 preparedStatement.setString(1, queryObject.toString());
@@ -78,6 +80,7 @@ public class JdbcDatastore implements Datastore {
             }
         }
 
+        @Override
         public Optional<T> singleResult() {
             //TODO: Optimize by doing count first, fail if greater than 1
             List<T> result = asList();
@@ -87,6 +90,7 @@ public class JdbcDatastore implements Datastore {
             return result.stream().findAny();
         }
 
+        @Override
         public int count() {
             try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(*) AS total FROM " + tableName + " WHERE data @> ?::JSONB")) {
                 preparedStatement.setString(1, queryObject.toString());
@@ -98,6 +102,7 @@ public class JdbcDatastore implements Datastore {
             }
         }
 
+        @Override
         public int delete() {
             try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + tableName + " WHERE data @> ?::JSONB")) {
                 preparedStatement.setString(1, queryObject.toString());
@@ -107,16 +112,17 @@ public class JdbcDatastore implements Datastore {
             }
         }
 
-        public class FieldQuery {
+        public class JdbcFieldQuery implements FieldQuery<T> {
             final String field;
 
-            public FieldQuery(String field) {
+            public JdbcFieldQuery(String field) {
                 this.field = field;
             }
 
+            @Override
             public <V> Query<T> equal(V value) {
-                addQuery(Query.this.queryObject, Arrays.asList(this.field.split("\\.")), value);
-                return Query.this;
+                addQuery(JdbcQuery.this.queryObject, Arrays.asList(this.field.split("\\.")), value);
+                return JdbcQuery.this;
             }
 
             private <V> void addQuery(JsonObject queryObject, List<String> fields, V value) {

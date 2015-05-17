@@ -6,7 +6,7 @@ public interface Datastore {
 
     <T> void save(T entity);
 
-    <T> JdbcDatastore.Query<T> createQuery(Class<T> type);
+    <T> Query<T> createQuery(Class<T> type);
 
     <T, V> Optional<T> get(Class<T> type, V id);
 
