@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 public class QueryTest {
 
 
-    public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterström", new Address("Vintervägen", "17777"));
+    public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterström", new SystemUser.Address("Vintervägen", "17777"));
     private JdbcDatastore datastore;
     private Connection connection;
 
