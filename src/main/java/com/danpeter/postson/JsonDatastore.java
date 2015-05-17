@@ -5,33 +5,33 @@ import com.google.common.base.CaseFormat;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 
 public class JsonDatastore implements Datastore {
-    final Connection connection;
-    final Gson gson;
+    private final DataSource dataSource;
+    private final Gson gson;
 
-    public JsonDatastore(String host, String port, String databaseName, String userName, String password) {
-        try {
-            this.connection = DriverManager.getConnection(
-                    String.format("jdbc:postgresql://%s:%s/%s", host, port, databaseName), userName, password);
-        } catch (SQLException e) {
-            throw new DatastoreException("Could not connect to underlying data source.", e);
-        }
+    public JsonDatastore(DataSource dataSource) {
+        this.dataSource = dataSource;
         this.gson = new Gson();
     }
 
     @Override
     public <T> void save(final T entity) {
-        String json = gson.toJson(entity);
-        String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entity.getClass().getSimpleName());
+        try (Connection connection = dataSource.getConnection()) {
+            String json = gson.toJson(entity);
+            String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entity.getClass().getSimpleName());
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + tableName + " (data) VALUES (?::JSONB)")) {
-            preparedStatement.setString(1, json);
-            preparedStatement.executeUpdate();
+            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + tableName + " (data) VALUES (?::JSONB)")) {
+                preparedStatement.setString(1, json);
+                preparedStatement.executeUpdate();
+            } catch (SQLException e) {
+                throw new DatastoreException(e);
+            }
         } catch (SQLException e) {
-            throw new DatastoreException(e);
+            e.printStackTrace();
         }
     }
 
@@ -67,7 +67,8 @@ public class JsonDatastore implements Datastore {
 
         @Override
         public List<T> asList() {
-            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT id, data FROM " + tableName + " WHERE data @> ?::JSONB")) {
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement preparedStatement = connection.prepareStatement("SELECT id, data FROM " + tableName + " WHERE data @> ?::JSONB")) {
                 preparedStatement.setString(1, queryObject.toString());
                 ResultSet resultSet = preparedStatement.executeQuery();
                 List<T> result = new ArrayList<>();
@@ -92,7 +93,9 @@ public class JsonDatastore implements Datastore {
 
         @Override
         public int count() {
-            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(*) AS total FROM " + tableName + " WHERE data @> ?::JSONB")) {
+
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(*) AS total FROM " + tableName + " WHERE data @> ?::JSONB")) {
                 preparedStatement.setString(1, queryObject.toString());
                 ResultSet resultSet = preparedStatement.executeQuery();
                 resultSet.next();
@@ -104,7 +107,8 @@ public class JsonDatastore implements Datastore {
 
         @Override
         public int delete() {
-            try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + tableName + " WHERE data @> ?::JSONB")) {
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + tableName + " WHERE data @> ?::JSONB")) {
                 preparedStatement.setString(1, queryObject.toString());
                 return preparedStatement.executeUpdate();
             } catch (SQLException e) {

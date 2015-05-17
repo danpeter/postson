@@ -1,7 +1,9 @@
 package com.danpeter.postson;
 
 import org.junit.*;
+import org.postgresql.ds.PGPoolingDataSource;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
@@ -16,20 +18,32 @@ public class JsonDatastoreTest {
 
 
     public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterström", new SystemUser.Address("Vintervägen", "17777"));
-    private Datastore datastore;
-    private Connection connection;
+    private static Datastore datastore;
+    private static PGPoolingDataSource source;
 
-    @Before
-    public void setUp() throws Exception {
-        datastore = new JsonDatastore("localhost", "5432", "test", "test", "test");
-        connection = DriverManager.getConnection(
-                "jdbc:postgresql://localhost:5432/test", "test", "test");
+    @BeforeClass
+    public static void setUp() throws Exception {
+        source = new PGPoolingDataSource();
+        source.setDataSourceName("A Data Source");
+        source.setServerName("localhost");
+        source.setDatabaseName("test");
+        source.setUser("test");
+        source.setPassword("test");
+        source.setMaxConnections(10);
+
+        datastore = new JsonDatastore(source);
     }
 
     @After
     public void tearDown() throws Exception {
+        Connection connection = source.getConnection();
         connection.createStatement().execute("DELETE FROM system_user");
         connection.close();
+    }
+
+    @AfterClass
+    public static void end() {
+        source.close();
     }
 
     @Test
