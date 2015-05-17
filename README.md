@@ -6,7 +6,15 @@ Assumes that the entity has a field named 'id' and that the table is named the s
 
 Example:
  ```java
-      Datastore datastore = new JsonDatastore("localhost", "5432", "dbName", "userName", "password");
+      PGPoolingDataSource source = new PGPoolingDataSource();
+              source.setDataSourceName("A Data Source");
+              source.setServerName("localhost");
+              source.setDatabaseName("test");
+              source.setUser("test");
+              source.setPassword("test");
+              source.setMaxConnections(10);
+
+      Datastore datastore = new JsonDatastore(source);
       User user = new User(UUID.randomUUID(), "Kent", "Kennedy");
       datastore.save(user);
 
