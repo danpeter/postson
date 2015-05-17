@@ -10,7 +10,7 @@ Example:
       User user = new User(UUID.randomUUID(), "Kent", "Kennedy");
       datastore.save(user);
 
-       Optional<SystemUser> result = datastore.createQuery(User.class)
+      Optional<User> result = datastore.createQuery(User.class)
                       .field("firstName")
                       .equal("Kent")
                       .singleResult();
