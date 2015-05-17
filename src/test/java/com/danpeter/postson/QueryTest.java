@@ -65,7 +65,7 @@ public class QueryTest {
         datastore.save(DAN_P);
         Optional<SystemUser> systemUserOptional = datastore.createQuery(SystemUser.class)
                 .field("id")
-                .equal(DAN_P.id().toString())
+                .equal(DAN_P.id())
                 .singleResult();
         assertThat(systemUserOptional.isPresent(), is(true));
     }
@@ -75,7 +75,7 @@ public class QueryTest {
         datastore.save(DAN_P);
         int count =  datastore.createQuery(SystemUser.class)
                 .field("id")
-                .equal(DAN_P.id().toString())
+                .equal(DAN_P.id())
                 .count();
         assertThat(count, is(1));
     }
@@ -83,7 +83,7 @@ public class QueryTest {
     @Test
     public void getById() throws Exception {
         datastore.save(DAN_P);
-        Optional<SystemUser> user = datastore.get(SystemUser.class, DAN_P.id().toString());
+        Optional<SystemUser> user = datastore.get(SystemUser.class, DAN_P.id());
         assertThat(user.isPresent(), is(true));
     }
 
@@ -97,8 +97,8 @@ public class QueryTest {
     @Test
     public void deleteEntityReturnsTrue() throws Exception {
         datastore.save(DAN_P);
-        assertThat(datastore.delete(SystemUser.class, DAN_P.id().toString()), is(true));
-        assertThat(datastore.get(SystemUser.class, DAN_P.id().toString()).isPresent(), is(false));
+        assertThat(datastore.delete(SystemUser.class, DAN_P.id()), is(true));
+        assertThat(datastore.get(SystemUser.class, DAN_P.id()).isPresent(), is(false));
     }
 
     @Test
