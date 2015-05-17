@@ -12,7 +12,7 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
-public class JdbcDatastoreTest {
+public class JsonDatastoreTest {
 
 
     public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterström", new SystemUser.Address("Vintervägen", "17777"));
@@ -21,7 +21,7 @@ public class JdbcDatastoreTest {
 
     @Before
     public void setUp() throws Exception {
-        datastore = new JdbcDatastore("localhost", "5432", "test", "test", "test");
+        datastore = new JsonDatastore("localhost", "5432", "test", "test", "test");
         connection = DriverManager.getConnection(
                 "jdbc:postgresql://localhost:5432/test", "test", "test");
     }

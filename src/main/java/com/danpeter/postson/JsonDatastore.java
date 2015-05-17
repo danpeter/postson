@@ -8,11 +8,11 @@ import com.google.gson.JsonObject;
 import java.sql.*;
 import java.util.*;
 
-public class JdbcDatastore implements Datastore {
+public class JsonDatastore implements Datastore {
     final Connection connection;
     final Gson gson;
 
-    public JdbcDatastore(String host, String port, String databaseName, String userName, String password) {
+    public JsonDatastore(String host, String port, String databaseName, String userName, String password) {
         try {
             this.connection = DriverManager.getConnection(
                     String.format("jdbc:postgresql://%s:%s/%s", host, port, databaseName), userName, password);
@@ -37,7 +37,7 @@ public class JdbcDatastore implements Datastore {
 
     @Override
     public <T> Query<T> createQuery(Class<T> type) {
-        return new JdbcQuery<>(type);
+        return new JsonQuery<>(type);
     }
 
     @Override
@@ -50,19 +50,19 @@ public class JdbcDatastore implements Datastore {
         return createQuery(type).field("id").equal(id).delete() > 0;
     }
 
-    public class JdbcQuery<T> implements Query<T> {
+    public class JsonQuery<T> implements Query<T> {
         private final Class<T> type;
         private final JsonObject queryObject = new JsonObject();
         private final String tableName;
 
-        public JdbcQuery(Class<T> type) {
+        public JsonQuery(Class<T> type) {
             this.type = type;
             this.tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, type.getSimpleName());
         }
 
         @Override
         public FieldQuery<T> field(String field) {
-            return new JdbcFieldQuery(field);
+            return new JsonFieldQuery(field);
         }
 
         @Override
@@ -112,17 +112,17 @@ public class JdbcDatastore implements Datastore {
             }
         }
 
-        public class JdbcFieldQuery implements FieldQuery<T> {
+        public class JsonFieldQuery implements FieldQuery<T> {
             final String field;
 
-            public JdbcFieldQuery(String field) {
+            public JsonFieldQuery(String field) {
                 this.field = field;
             }
 
             @Override
             public <V> Query<T> equal(V value) {
-                addQuery(JdbcQuery.this.queryObject, Arrays.asList(this.field.split("\\.")), value);
-                return JdbcQuery.this;
+                addQuery(JsonQuery.this.queryObject, Arrays.asList(this.field.split("\\.")), value);
+                return JsonQuery.this;
             }
 
             private <V> void addQuery(JsonObject queryObject, List<String> fields, V value) {
