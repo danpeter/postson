@@ -23,8 +23,9 @@ public class JdbcDatastore implements Datastore {
     @Override
     public <T> void save(final T entity) {
         String json = gson.toJson(entity);
+        String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entity.getClass().getSimpleName());
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO system_user (data) VALUES (?::JSONB)")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + tableName + " (data) VALUES (?::JSONB)")) {
             preparedStatement.setString(1, json);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
@@ -38,9 +39,13 @@ public class JdbcDatastore implements Datastore {
     }
 
     @Override
-    public <T> Optional<T> get(Class<T> type, String id) {
-        //TODO: Id needs to be an object
-         return createQuery(type).field("id").equal(id).singleResult();
+    public <T, V> Optional<T> get(Class<T> type, V id) {
+        return createQuery(type).field("id").equal(id).singleResult();
+    }
+
+    @Override
+    public <T, V> boolean delete(Class<T> type, V id) {
+        return createQuery(type).field("id").equal(id).delete() > 0;
     }
 
     public class Query<T> {
@@ -91,6 +96,15 @@ public class JdbcDatastore implements Datastore {
             }
         }
 
+        public int delete() {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + tableName + " WHERE data @> ?::JSONB")) {
+                preparedStatement.setString(1, queryObject.toString());
+                return preparedStatement.executeUpdate();
+            } catch (SQLException e) {
+                throw new DatastoreException(e);
+            }
+        }
+
         public class FieldQuery {
             final String field;
 
@@ -98,21 +112,20 @@ public class JdbcDatastore implements Datastore {
                 this.field = field;
             }
 
-            public Query<T> equal(String value) {
+            public <V> Query<T> equal(V value) {
                 addQuery(Query.this.queryObject, Arrays.asList(this.field.split("\\.")), value);
                 return Query.this;
             }
 
-            private void addQuery(JsonObject queryObject, List<String> fields, String value) {
+            private <V> void addQuery(JsonObject queryObject, List<String> fields, V value) {
                 if (fields.size() == 1) {
-                    queryObject.addProperty(fields.get(0), value);
+                     queryObject.add(fields.get(0), gson.toJsonTree(value));
                 } else {
                     JsonObject nextQueryObject = new JsonObject();
                     addQuery(nextQueryObject, fields.subList(1, fields.size()), value);
-                    queryObject.add(fields.get(0), nextQueryObject);
+                    queryObject.add(fields.get(0), gson.toJsonTree(nextQueryObject));
                 }
             }
-
         }
     }
 }

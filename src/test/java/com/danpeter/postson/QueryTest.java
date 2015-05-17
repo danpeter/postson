@@ -4,6 +4,7 @@ import org.junit.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -85,5 +86,24 @@ public class QueryTest {
         datastore.save(DAN_P);
         Optional<SystemUser> user = datastore.get(SystemUser.class, DAN_P.id().toString());
         assertThat(user.isPresent(), is(true));
+    }
+
+    @Test
+    public void getByCompundId() throws Exception {
+        Trip trip = new Trip(new Trip.TripId("Sweden", "Bahamas", LocalDateTime.now()), "Super vacation!");
+        datastore.save(trip);
+        assertThat(datastore.get(Trip.class, trip.id()).isPresent(), is(true));
+    }
+
+    @Test
+    public void deleteEntityReturnsTrue() throws Exception {
+        datastore.save(DAN_P);
+        assertThat(datastore.delete(SystemUser.class, DAN_P.id().toString()), is(true));
+        assertThat(datastore.get(SystemUser.class, DAN_P.id().toString()).isPresent(), is(false));
+    }
+
+    @Test
+    public void deleteEntityThatDoesNotExistReturnsFalse() throws Exception {
+        assertThat(datastore.delete(SystemUser.class, "does_not_exist"), is(false));
     }
 }

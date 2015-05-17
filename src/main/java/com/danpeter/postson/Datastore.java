@@ -8,5 +8,7 @@ public interface Datastore {
 
     <T> JdbcDatastore.Query<T> createQuery(Class<T> type);
 
-    <T> Optional<T> get(Class<T> type, String id);
+    <T, V> Optional<T> get(Class<T> type, V id);
+
+    <T, V> boolean delete(Class<T> type, V id);
 }
