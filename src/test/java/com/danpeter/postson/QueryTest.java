@@ -69,4 +69,21 @@ public class QueryTest {
                 .singleResult();
         assertThat(systemUserOptional.isPresent(), is(true));
     }
+
+    @Test
+    public void getCountByField() throws Exception {
+        datastore.save(DAN_P);
+        int count =  datastore.createQuery(SystemUser.class)
+                .field("id")
+                .equal(DAN_P.id().toString())
+                .count();
+        assertThat(count, is(1));
+    }
+
+    @Test
+    public void getById() throws Exception {
+        datastore.save(DAN_P);
+        Optional<SystemUser> user = datastore.get(SystemUser.class, DAN_P.id().toString());
+        assertThat(user.isPresent(), is(true));
+    }
 }

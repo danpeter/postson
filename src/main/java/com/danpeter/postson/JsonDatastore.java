@@ -37,15 +37,19 @@ public class JsonDatastore implements Datastore {
         return new Query<>(type);
     }
 
+    public <T> Optional<T> get(Class<T> type, String id) {
+        //TODO: Id needs to be an object
+         return createQuery(type).field("id").equal(id).singleResult();
+    }
+
     public class Query<T> {
         private final Class<T> type;
-        private StringBuilder query = new StringBuilder("SELECT id, data FROM ");
         private JsonObject queryObject = new JsonObject();
+        private String tableName;
 
         public Query(Class<T> type) {
             this.type = type;
-            String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, type.getSimpleName());
-            query.append(tableName);
+            this.tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, type.getSimpleName());
         }
 
         public FieldQuery field(String field) {
@@ -53,7 +57,7 @@ public class JsonDatastore implements Datastore {
         }
 
         public List<T> asList() {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(query + " WHERE data @> ?::JSONB")) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT id, data FROM " + tableName + " WHERE data @> ?::JSONB")) {
                 preparedStatement.setString(1, queryObject.toString());
                 ResultSet resultSet = preparedStatement.executeQuery();
                 List<T> result = new ArrayList<>();
@@ -67,11 +71,23 @@ public class JsonDatastore implements Datastore {
         }
 
         public Optional<T> singleResult() {
+            //TODO: Optimize by doing count first, fail if greater than 1
             List<T> result = asList();
             if (result.size() > 1) {
                 throw new JsonDatastoreException("No unique result.");
             }
             return result.stream().findAny();
+        }
+
+        public int count() {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(*) AS total FROM " + tableName + " WHERE data @> ?::JSONB")) {
+                preparedStatement.setString(1, queryObject.toString());
+                ResultSet resultSet = preparedStatement.executeQuery();
+                resultSet.next();
+                return resultSet.getInt("total");
+            } catch (SQLException e) {
+                throw new JsonDatastoreException(e);
+            }
         }
 
         public class FieldQuery {
