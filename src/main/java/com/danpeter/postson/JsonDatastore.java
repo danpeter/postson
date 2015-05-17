@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-public class JsonDatastore {
+public class JsonDatastore implements Datastore {
     final Connection connection;
     final Gson gson;
 
@@ -20,6 +20,7 @@ public class JsonDatastore {
         this.gson = new Gson();
     }
 
+    @Override
     public <T> void save(final T entity) {
         String json = gson.toJson(entity);
 
@@ -31,6 +32,7 @@ public class JsonDatastore {
         }
     }
 
+    @Override
     public <T> Query<T> createQuery(Class<T> type) {
         return new Query<>(type);
     }
@@ -42,7 +44,7 @@ public class JsonDatastore {
 
         public Query(Class<T> type) {
             this.type = type;
-            String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, type.getName());
+            String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, type.getSimpleName());
             query.append(tableName);
         }
 
@@ -62,6 +64,14 @@ public class JsonDatastore {
             } catch (SQLException e) {
                 throw new JsonDatastoreException(e);
             }
+        }
+
+        public Optional<T> singleResult() {
+            List<T> result = asList();
+            if (result.size() > 1) {
+                throw new JsonDatastoreException("No unique result.");
+            }
+            return result.stream().findAny();
         }
 
         public class FieldQuery {
