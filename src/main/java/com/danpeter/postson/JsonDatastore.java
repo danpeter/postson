@@ -3,19 +3,44 @@ package com.danpeter.postson;
 
 import com.google.common.base.CaseFormat;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
+/**
+ * Datastore used for storing object as JSONB in Postgres.
+ */
 public class JsonDatastore implements Datastore {
     private final DataSource dataSource;
     private final Gson gson;
 
+    /**
+     * Constructs a JsonDatastore
+     *
+     * @param dataSource The JDBC datasource.
+     */
     public JsonDatastore(DataSource dataSource) {
         this.dataSource = dataSource;
         this.gson = new Gson();
+    }
+
+    /**
+     * Constructs a JsonDatastore using adapters, adds support for serializing and de-serializing certain classes.
+     *
+     * @param dataSource The JDBC datasource.
+     * @param adapters A map of classes and their adapters.
+     */
+    public JsonDatastore(DataSource dataSource, Map<Class, Object> adapters) {
+        this.dataSource = dataSource;
+        GsonBuilder builder = new GsonBuilder();
+        adapters.forEach(builder::registerTypeAdapter);
+        this.gson = builder.create();
     }
 
     @Override

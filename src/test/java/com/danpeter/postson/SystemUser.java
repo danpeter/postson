@@ -20,6 +20,14 @@ public class SystemUser {
         return id;
     }
 
+    public String firstName() {
+        return firstName;
+    }
+
+    public String lastName() {
+        return lastName;
+    }
+
     public static class Address {
 
         private final String street;

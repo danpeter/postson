@@ -1,18 +1,22 @@
 package com.danpeter.postson;
 
-import org.junit.*;
+import com.google.common.collect.ImmutableMap;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.postgresql.ds.PGPoolingDataSource;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class JsonDatastoreTest {
 
@@ -34,16 +38,16 @@ public class JsonDatastoreTest {
         datastore = new JsonDatastore(source);
     }
 
+    @AfterClass
+    public static void end() {
+        source.close();
+    }
+
     @After
     public void tearDown() throws Exception {
         Connection connection = source.getConnection();
         connection.createStatement().execute("DELETE FROM system_user");
         connection.close();
-    }
-
-    @AfterClass
-    public static void end() {
-        source.close();
     }
 
     @Test
@@ -87,7 +91,7 @@ public class JsonDatastoreTest {
     @Test
     public void getCountByField() throws Exception {
         datastore.save(DAN_P);
-        int count =  datastore.createQuery(SystemUser.class)
+        int count = datastore.createQuery(SystemUser.class)
                 .field("id")
                 .equal(DAN_P.id())
                 .count();
@@ -118,5 +122,16 @@ public class JsonDatastoreTest {
     @Test
     public void deleteEntityThatDoesNotExistReturnsFalse() throws Exception {
         assertThat(datastore.delete(SystemUser.class, "does_not_exist"), is(false));
+    }
+
+    @Test
+    public void addTypeAdapter() throws Exception {
+        Datastore datastoreWithAdapter = new JsonDatastore(source, ImmutableMap.of(SystemUser.class, new SystemUserSerializer()));
+        datastoreWithAdapter.save(DAN_P);
+        Statement statement = source.getConnection().createStatement();
+        statement.execute("SELECT data from system_user");
+        ResultSet resultSet = statement.getResultSet();
+        resultSet.next();
+        assertThat(resultSet.getString(1), is("{\"displayName\": \"Dan Peterström\"}"));
     }
 }
