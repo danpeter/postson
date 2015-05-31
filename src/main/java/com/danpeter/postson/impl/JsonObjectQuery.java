@@ -1,6 +1,7 @@
 package com.danpeter.postson.impl;
 
 import com.danpeter.postson.DatastoreException;
+import com.danpeter.postson.ObjectQuery;
 import com.danpeter.postson.Query;
 import com.google.common.base.CaseFormat;
 import com.google.gson.Gson;
@@ -16,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class JsonObjectQuery<T> implements Query<T> {
+public class JsonObjectQuery<T> implements ObjectQuery<T> {
     private final Class<T> type;
     private final DataSource dataSource;
     private final Gson gson;

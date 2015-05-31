@@ -1,9 +1,7 @@
 package com.danpeter.postson.impl;
 
 
-import com.danpeter.postson.Datastore;
-import com.danpeter.postson.DatastoreException;
-import com.danpeter.postson.Query;
+import com.danpeter.postson.*;
 import com.google.common.base.CaseFormat;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -73,8 +71,13 @@ public class JsonDatastore implements Datastore {
     }
 
     @Override
-    public <T> Query<T> createObjectQuery(Class<T> type) {
+    public <T> ObjectQuery<T> createObjectQuery(Class<T> type) {
         return new JsonObjectQuery<>(type, dataSource, gson);
+    }
+
+    @Override
+    public <T> PrimitiveQuery<T> createPrimitiveQuery(Class<T> type) {
+        return new JsonPrimitiveQuery<>(type, dataSource, gson);
     }
 }
 

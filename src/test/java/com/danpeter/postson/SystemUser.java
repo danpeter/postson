@@ -8,12 +8,14 @@ public class SystemUser {
     private final String firstName;
     private final String lastName;
     private final Address address;
+    private final int age;
 
-    public SystemUser(UUID id, String firstName, String lastName, Address address) {
+    public SystemUser(UUID id, String firstName, String lastName, Address address, int age) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
+        this.age = age;
     }
 
     public UUID id() {

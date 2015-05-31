@@ -12,7 +12,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,7 +21,7 @@ import static org.junit.Assert.assertThat;
 public class JsonDatastoreTest {
 
 
-    public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterström", new SystemUser.Address("Vintervägen", "17777"));
+    public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterström", new SystemUser.Address("Vintervägen", "17777"), 30);
     private static Datastore datastore;
     private static PGPoolingDataSource source;
 
@@ -51,48 +50,10 @@ public class JsonDatastoreTest {
         connection.close();
     }
 
-    @Test
-    public void findByRootField() throws Exception {
-        datastore.save(DAN_P);
-        List<SystemUser> systemUsers = datastore.createObjectQuery(SystemUser.class)
-                .field("firstName", "Dan")
-                .asList();
-
-        assertThat(systemUsers.size(), is(1));
-    }
-
-    @Test
-    public void findByNestedField() throws Exception {
-        datastore.save(DAN_P);
-        List<SystemUser> systemUsers = datastore.createObjectQuery(SystemUser.class)
-                .field("address.street", "Vintervägen")
-                .asList();
-
-        assertThat(systemUsers.size(), is(1));
-    }
-
     @Test(expected = DatastoreException.class)
     public void idIsUnique() throws Exception {
         datastore.save(DAN_P);
         datastore.save(DAN_P);
-    }
-
-    @Test
-    public void getSingleByField() throws Exception {
-        datastore.save(DAN_P);
-        Optional<SystemUser> systemUserOptional = datastore.createObjectQuery(SystemUser.class)
-                .field("id", DAN_P.id())
-                .singleResult();
-        assertThat(systemUserOptional.isPresent(), is(true));
-    }
-
-    @Test
-    public void getCountByField() throws Exception {
-        datastore.save(DAN_P);
-        int count = datastore.createObjectQuery(SystemUser.class)
-                .field("id", DAN_P.id())
-                .count();
-        assertThat(count, is(1));
     }
 
     @Test
