@@ -12,7 +12,8 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Datastore used for storing object as JSONB in Postgres.
@@ -35,7 +36,7 @@ public class JsonDatastore implements Datastore {
      * Constructs a JsonDatastore using adapters, adds support for serializing and de-serializing certain classes.
      *
      * @param dataSource The JDBC datasource.
-     * @param adapters A map of classes and their adapters.
+     * @param adapters   A map of classes and their adapters.
      */
     public JsonDatastore(DataSource dataSource, Map<Class, Object> adapters) {
         this.dataSource = dataSource;
@@ -63,12 +64,12 @@ public class JsonDatastore implements Datastore {
 
     @Override
     public <T, V> Optional<T> get(Class<T> type, V id) {
-        return createObjectQuery(type).field("id").equal(id).singleResult();
+        return createObjectQuery(type).field("id", id).singleResult();
     }
 
     @Override
     public <T, V> boolean delete(Class<T> type, V id) {
-        return createObjectQuery(type).field("id").equal(id).delete() > 0;
+        return createObjectQuery(type).field("id", id).delete() > 0;
     }
 
     @Override

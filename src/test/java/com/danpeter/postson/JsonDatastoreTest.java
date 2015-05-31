@@ -55,8 +55,7 @@ public class JsonDatastoreTest {
     public void findByRootField() throws Exception {
         datastore.save(DAN_P);
         List<SystemUser> systemUsers = datastore.createObjectQuery(SystemUser.class)
-                .field("firstName")
-                .equal("Dan")
+                .field("firstName", "Dan")
                 .asList();
 
         assertThat(systemUsers.size(), is(1));
@@ -66,8 +65,7 @@ public class JsonDatastoreTest {
     public void findByNestedField() throws Exception {
         datastore.save(DAN_P);
         List<SystemUser> systemUsers = datastore.createObjectQuery(SystemUser.class)
-                .field("address.street")
-                .equal("Vintervägen")
+                .field("address.street", "Vintervägen")
                 .asList();
 
         assertThat(systemUsers.size(), is(1));
@@ -83,8 +81,7 @@ public class JsonDatastoreTest {
     public void getSingleByField() throws Exception {
         datastore.save(DAN_P);
         Optional<SystemUser> systemUserOptional = datastore.createObjectQuery(SystemUser.class)
-                .field("id")
-                .equal(DAN_P.id())
+                .field("id", DAN_P.id())
                 .singleResult();
         assertThat(systemUserOptional.isPresent(), is(true));
     }
@@ -93,8 +90,7 @@ public class JsonDatastoreTest {
     public void getCountByField() throws Exception {
         datastore.save(DAN_P);
         int count = datastore.createObjectQuery(SystemUser.class)
-                .field("id")
-                .equal(DAN_P.id())
+                .field("id", DAN_P.id())
                 .count();
         assertThat(count, is(1));
     }

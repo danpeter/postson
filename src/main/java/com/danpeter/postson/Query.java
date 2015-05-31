@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface Query<T> {
-    FieldQuery<T> field(String field);
+
+    <V> Query<T> field(String field, V value);
 
     List<T> asList();
 

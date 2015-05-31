@@ -1,7 +1,6 @@
 package com.danpeter.postson.impl;
 
 import com.danpeter.postson.DatastoreException;
-import com.danpeter.postson.FieldQuery;
 import com.danpeter.postson.Query;
 import com.google.common.base.CaseFormat;
 import com.google.gson.Gson;
@@ -32,8 +31,19 @@ public class JsonObjectQuery<T> implements Query<T> {
     }
 
     @Override
-    public FieldQuery<T> field(String field) {
-        return new JsonFieldQuery(field);
+    public <V> Query<T> field(String field, V value) {
+        addQuery(JsonObjectQuery.this.queryObject, Arrays.asList(field.split("\\.")), value);
+        return this;
+    }
+
+    private <V> void addQuery(JsonObject queryObject, List<String> fields, V value) {
+        if (fields.size() == 1) {
+            queryObject.add(fields.get(0), gson.toJsonTree(value));
+        } else {
+            JsonObject nextQueryObject = new JsonObject();
+            addQuery(nextQueryObject, fields.subList(1, fields.size()), value);
+            queryObject.add(fields.get(0), gson.toJsonTree(nextQueryObject));
+        }
     }
 
     @Override
@@ -64,7 +74,6 @@ public class JsonObjectQuery<T> implements Query<T> {
 
     @Override
     public int count() {
-
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(*) AS total FROM " + tableName + " WHERE data @> ?::JSONB")) {
             preparedStatement.setString(1, queryObject.toString());
@@ -84,30 +93,6 @@ public class JsonObjectQuery<T> implements Query<T> {
             return preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new DatastoreException(e);
-        }
-    }
-
-    public class JsonFieldQuery implements FieldQuery<T> {
-        final String field;
-
-        public JsonFieldQuery(String field) {
-            this.field = field;
-        }
-
-        @Override
-        public <V> Query<T> equal(V value) {
-            addQuery(JsonObjectQuery.this.queryObject, Arrays.asList(this.field.split("\\.")), value);
-            return JsonObjectQuery.this;
-        }
-
-        private <V> void addQuery(JsonObject queryObject, List<String> fields, V value) {
-            if (fields.size() == 1) {
-                queryObject.add(fields.get(0), gson.toJsonTree(value));
-            } else {
-                JsonObject nextQueryObject = new JsonObject();
-                addQuery(nextQueryObject, fields.subList(1, fields.size()), value);
-                queryObject.add(fields.get(0), gson.toJsonTree(nextQueryObject));
-            }
         }
     }
 }
