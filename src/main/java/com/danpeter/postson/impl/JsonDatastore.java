@@ -1,15 +1,16 @@
-package com.danpeter.postson;
+package com.danpeter.postson.impl;
 
 
+import com.danpeter.postson.Datastore;
+import com.danpeter.postson.DatastoreException;
+import com.danpeter.postson.Query;
 import com.google.common.base.CaseFormat;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 

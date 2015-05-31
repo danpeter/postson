@@ -1,5 +1,8 @@
-package com.danpeter.postson;
+package com.danpeter.postson.impl;
 
+import com.danpeter.postson.DatastoreException;
+import com.danpeter.postson.FieldQuery;
+import com.danpeter.postson.Query;
 import com.google.common.base.CaseFormat;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -21,7 +24,7 @@ public class JsonObjectQuery<T> implements Query<T> {
     private final JsonObject queryObject = new JsonObject();
     private final String tableName;
 
-    public JsonObjectQuery(Class<T> type, DataSource dataSource, Gson gson) {
+    protected JsonObjectQuery(Class<T> type, DataSource dataSource, Gson gson) {
         this.type = type;
         this.dataSource = dataSource;
         this.gson = gson;

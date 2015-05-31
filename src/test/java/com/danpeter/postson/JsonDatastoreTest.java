@@ -1,5 +1,6 @@
 package com.danpeter.postson;
 
+import com.danpeter.postson.impl.JsonDatastore;
 import com.google.common.collect.ImmutableMap;
 import org.junit.After;
 import org.junit.AfterClass;
