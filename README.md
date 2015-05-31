@@ -15,13 +15,18 @@ Example:
               source.setMaxConnections(10);
 
       Datastore datastore = new JsonDatastore(source);
-      User user = new User(UUID.randomUUID(), "Kent", "Kennedy");
+      User user = new User(UUID.randomUUID(), "Kent", "Kennedy", 30);
       datastore.save(user);
 
-      Optional<User> result = datastore.createQuery(User.class)
-                      .field("firstName")
-                      .equal("Kent")
+      Optional<User> result = datastore.createObjectQuery(User.class)
+                      .field("firstName", "Kent")
                       .singleResult();
+
+      List<User> users = datastore.createPrimitiveQuery(User.class)
+                      .field("age")
+                      .greaterThan(20)
+                      .asList();
+
 ```
  Dependencies:
  * Postgres version > 9.4.
