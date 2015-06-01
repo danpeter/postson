@@ -39,7 +39,7 @@ public class JsonPrimitiveQuery<T> implements PrimitiveQuery<T> {
 
     @Override
     public List<T> asList() {
-        String query = queryFilters.stream().collect(Collectors.joining("AND", "SELECT id, data FROM " + tableName + " WHERE ", ""));
+        String query = queryFilters.stream().collect(Collectors.joining(" AND ", "SELECT id, data FROM " + tableName + " WHERE ", ""));
 
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -67,7 +67,7 @@ public class JsonPrimitiveQuery<T> implements PrimitiveQuery<T> {
 
     @Override
     public int count() {
-        String query = queryFilters.stream().collect(Collectors.joining("AND", "SELECT COUNT(*) AS total FROM " + tableName + " WHERE ", ""));
+        String query = queryFilters.stream().collect(Collectors.joining(" AND ", "SELECT COUNT(*) AS total FROM " + tableName + " WHERE ", ""));
 
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -83,7 +83,7 @@ public class JsonPrimitiveQuery<T> implements PrimitiveQuery<T> {
 
     @Override
     public int delete() {
-        String query = queryFilters.stream().collect(Collectors.joining("AND", "DELETE FROM " + tableName + " WHERE ", ""));
+        String query = queryFilters.stream().collect(Collectors.joining(" AND ", "DELETE FROM " + tableName + " WHERE ", ""));
 
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {

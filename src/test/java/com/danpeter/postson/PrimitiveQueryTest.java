@@ -5,6 +5,7 @@ import org.junit.*;
 import org.postgresql.ds.PGPoolingDataSource;
 
 import java.sql.Connection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -90,6 +91,18 @@ public class PrimitiveQueryTest {
                 .equal("Vintervägen")
                 .singleResult();
         assertThat(user.isPresent(), is(true));
+    }
+
+    @Test
+    public void twoFieldsBothMustMatch() throws Exception {
+        datastore.save(new SystemUser(UUID.randomUUID(), "Daniel", "Karlsson", new SystemUser.Address("Bergvägen", "17717"), 30));
+        List<SystemUser> users = datastore.createPrimitiveQuery(SystemUser.class)
+                .field("address.street")
+                .equal("Vintervägen")
+                .field("firstName")
+                .beginsWithIgnoreCase("Dan")
+                .asList();
+        assertThat(users.size(), is(1));
     }
 
     @Test
