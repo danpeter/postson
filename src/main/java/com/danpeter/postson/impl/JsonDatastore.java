@@ -24,8 +24,8 @@ public class JsonDatastore implements Datastore {
      * @param dataSource The JDBC datasource.
      */
     public JsonDatastore(DataSource dataSource) {
-        this.gson = new Gson();
-        this.queryExecutor = new QueryExecutor(dataSource, this.gson);
+        gson = new Gson();
+        queryExecutor = new QueryExecutor(dataSource, gson);
     }
 
     /**
@@ -37,8 +37,8 @@ public class JsonDatastore implements Datastore {
     public JsonDatastore(DataSource dataSource, Map<Class, Object> adapters) {
         GsonBuilder builder = new GsonBuilder();
         adapters.forEach(builder::registerTypeAdapter);
-        this.gson = builder.create();
-        this.queryExecutor = new QueryExecutor(dataSource, this.gson);
+        gson = builder.create();
+        queryExecutor = new QueryExecutor(dataSource, gson);
     }
 
     @Override

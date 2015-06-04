@@ -35,11 +35,11 @@ class QueryExecutor {
         }
     }
 
-    <T> List<T> asList(Class<T> type, String fromStatement, List<Object> args) {
+    <T> List<T> asList(Class<T> type, String fromStatement, List<Object> parameters) {
         final String tableName = toSnakeCase.apply(type);
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement("SELECT id, data FROM " + tableName + " WHERE " + fromStatement)) {
-            setParameters(args, preparedStatement);
+            setParameters(parameters, preparedStatement);
             ResultSet resultSet = preparedStatement.executeQuery();
             List<T> result = new ArrayList<>();
             while (resultSet.next()) {
@@ -51,19 +51,19 @@ class QueryExecutor {
         }
     }
 
-    <T> Optional<T> singleResult(Class<T> type, String fromStatement, List<Object> args) {
-        List<T> result = asList(type, fromStatement, args);
+    <T> Optional<T> singleResult(Class<T> type, String fromStatement, List<Object> parameters) {
+        List<T> result = asList(type, fromStatement, parameters);
         if (result.size() > 1) {
             throw new DatastoreException("No unique result.");
         }
         return result.stream().findAny();
     }
 
-    <T> int count(Class<T> type, String fromStatement, List<Object> args) {
+    <T> int count(Class<T> type, String fromStatement, List<Object> parameters) {
         final String tableName = toSnakeCase.apply(type);
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(*) AS total FROM " + tableName + " WHERE " + fromStatement)) {
-            setParameters(args, preparedStatement);
+            setParameters(parameters, preparedStatement);
             ResultSet resultSet = preparedStatement.executeQuery();
             resultSet.next();
             return resultSet.getInt("total");
@@ -72,20 +72,21 @@ class QueryExecutor {
         }
     }
 
-    <T> int delete(Class<T> type, String fromStatement, List<Object> args) {
+    <T> int delete(Class<T> type, String fromStatement, List<Object> parameters) {
         final String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, type.getSimpleName());
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + tableName + " WHERE " + fromStatement)) {
-            setParameters(args, preparedStatement);
+            setParameters(parameters, preparedStatement);
             return preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new DatastoreException(e);
         }
     }
 
-    private void setParameters(List<Object> args, PreparedStatement preparedStatement) throws SQLException {
-        for (int i = 1; i <= args.size(); i++) {
-            preparedStatement.setObject(1, args.get(i - 1));
+    private void setParameters(List<Object> parameters, PreparedStatement preparedStatement) throws SQLException {
+        int count = 0;
+        for(Object param : parameters) {
+            preparedStatement.setObject(++count, param);
         }
     }
 }
