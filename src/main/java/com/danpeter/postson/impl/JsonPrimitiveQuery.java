@@ -1,35 +1,22 @@
 package com.danpeter.postson.impl;
 
-import com.danpeter.postson.DatastoreException;
 import com.danpeter.postson.FieldQuery;
 import com.danpeter.postson.PrimitiveQuery;
-import com.google.common.base.CaseFormat;
-import com.google.gson.Gson;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.Collections.emptyList;
 
 public class JsonPrimitiveQuery<T> implements PrimitiveQuery<T> {
 
     private final Class<T> type;
-    private final DataSource dataSource;
-    private final Gson gson;
-    private final String tableName;
-    private Collection<String> queryFilters = new ArrayList<>();
+    private final QueryExecutor queryExecutor;
+    private final Collection<String> queryFilters = new ArrayList<>();
 
-    protected JsonPrimitiveQuery(Class<T> type, DataSource dataSource, Gson gson) {
+    public JsonPrimitiveQuery(Class<T> type, QueryExecutor queryExecutor) {
         this.type = type;
-        this.dataSource = dataSource;
-        this.gson = gson;
-        this.tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, type.getSimpleName());
+        this.queryExecutor = queryExecutor;
     }
 
     @Override
@@ -39,60 +26,26 @@ public class JsonPrimitiveQuery<T> implements PrimitiveQuery<T> {
 
     @Override
     public List<T> asList() {
-        String query = queryFilters.stream().collect(Collectors.joining(" AND ", "SELECT id, data FROM " + tableName + " WHERE ", ""));
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            //TODO: Handle parameters in the prepared statement
-//            preparedStatement.setString(1, queryObject.toString());
-            ResultSet resultSet = preparedStatement.executeQuery();
-            List<T> result = new ArrayList<>();
-            while (resultSet.next()) {
-                result.add(gson.fromJson(resultSet.getString("data"), type));
-            }
-            return result;
-        } catch (SQLException e) {
-            throw new DatastoreException(e);
-        }
+        return queryExecutor.asList(type, createFromStatement(), emptyList());
     }
 
     @Override
     public Optional<T> singleResult() {
-        List<T> result = asList();
-        if (result.size() > 1) {
-            throw new DatastoreException("No unique result.");
-        }
-        return result.stream().findAny();
+        return queryExecutor.singleResult(type, createFromStatement(), emptyList());
+    }
+
+    private String createFromStatement() {
+        return queryFilters.stream().collect(Collectors.joining(" AND "));
     }
 
     @Override
     public int count() {
-        String query = queryFilters.stream().collect(Collectors.joining(" AND ", "SELECT COUNT(*) AS total FROM " + tableName + " WHERE ", ""));
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            //TODO: Handle parameters in the prepared statement
-//            preparedStatement.setString(1, queryObject.toString());
-            ResultSet resultSet = preparedStatement.executeQuery();
-            resultSet.next();
-            return resultSet.getInt("total");
-        } catch (SQLException e) {
-            throw new DatastoreException(e);
-        }
+        return queryExecutor.count(type, createFromStatement(), emptyList());
     }
 
     @Override
     public int delete() {
-        String query = queryFilters.stream().collect(Collectors.joining(" AND ", "DELETE FROM " + tableName + " WHERE ", ""));
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            //TODO: Handle parameters in the prepared statement
-//            preparedStatement.setString(1, queryObject.toString());
-            return preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatastoreException(e);
-        }
+        return queryExecutor.delete(type, createFromStatement(), emptyList());
     }
 
     public class JsonFieldQuery implements FieldQuery<T> {
@@ -109,13 +62,13 @@ public class JsonPrimitiveQuery<T> implements PrimitiveQuery<T> {
         }
 
         @Override
-        public <V> PrimitiveQuery<T> greaterThan(int value) {
+        public PrimitiveQuery<T> greaterThan(int value) {
             queryFilters.add(jsonPath(field) + " > '" + value + "'");
             return JsonPrimitiveQuery.this;
         }
 
         @Override
-        public <V> PrimitiveQuery<T> lessThan(int value) {
+        public PrimitiveQuery<T> lessThan(int value) {
             queryFilters.add(jsonPath(field) + " < '" + value + "'");
             return JsonPrimitiveQuery.this;
         }

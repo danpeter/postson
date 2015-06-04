@@ -1,15 +1,13 @@
 package com.danpeter.postson.impl;
 
 
-import com.danpeter.postson.*;
-import com.google.common.base.CaseFormat;
+import com.danpeter.postson.Datastore;
+import com.danpeter.postson.ObjectQuery;
+import com.danpeter.postson.PrimitiveQuery;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -17,8 +15,8 @@ import java.util.Optional;
  * Datastore used for storing object as JSONB in Postgres.
  */
 public class JsonDatastore implements Datastore {
-    private final DataSource dataSource;
     private final Gson gson;
+    private final QueryExecutor queryExecutor;
 
     /**
      * Constructs a JsonDatastore
@@ -26,8 +24,8 @@ public class JsonDatastore implements Datastore {
      * @param dataSource The JDBC datasource.
      */
     public JsonDatastore(DataSource dataSource) {
-        this.dataSource = dataSource;
         this.gson = new Gson();
+        this.queryExecutor = new QueryExecutor(dataSource, this.gson);
     }
 
     /**
@@ -37,27 +35,15 @@ public class JsonDatastore implements Datastore {
      * @param adapters   A map of classes and their adapters.
      */
     public JsonDatastore(DataSource dataSource, Map<Class, Object> adapters) {
-        this.dataSource = dataSource;
         GsonBuilder builder = new GsonBuilder();
         adapters.forEach(builder::registerTypeAdapter);
         this.gson = builder.create();
+        this.queryExecutor = new QueryExecutor(dataSource, this.gson);
     }
 
     @Override
     public <T> void save(final T entity) {
-        try (Connection connection = dataSource.getConnection()) {
-            String json = gson.toJson(entity);
-            String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entity.getClass().getSimpleName());
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + tableName + " (data) VALUES (?::JSONB)")) {
-                preparedStatement.setString(1, json);
-                preparedStatement.executeUpdate();
-            } catch (SQLException e) {
-                throw new DatastoreException(e);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        queryExecutor.save(entity);
     }
 
     @Override
@@ -72,12 +58,12 @@ public class JsonDatastore implements Datastore {
 
     @Override
     public <T> ObjectQuery<T> createObjectQuery(Class<T> type) {
-        return new JsonObjectQuery<>(type, dataSource, gson);
+        return new JsonObjectQuery<>(type, queryExecutor, gson);
     }
 
     @Override
     public <T> PrimitiveQuery<T> createPrimitiveQuery(Class<T> type) {
-        return new JsonPrimitiveQuery<>(type, dataSource, gson);
+        return new JsonPrimitiveQuery<>(type, queryExecutor);
     }
 }
 
