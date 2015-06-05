@@ -48,12 +48,14 @@ public class JsonDatastore implements Datastore {
 
     @Override
     public <T, V> Optional<T> get(Class<T> type, V id) {
-        return createObjectQuery(type).field("id", id).singleResult();
+        final String idField = IdField.from(type).toString();
+        return createObjectQuery(type).field(idField, id).singleResult();
     }
 
     @Override
     public <T, V> boolean delete(Class<T> type, V id) {
-        return createObjectQuery(type).field("id", id).delete() > 0;
+        final String idField = IdField.from(type).toString();
+        return createObjectQuery(type).field(idField, id).delete() > 0;
     }
 
     @Override

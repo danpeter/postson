@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.function.Function;
 
 class QueryExecutor {
-    private static Function<Class, String> toSnakeCase = (clazz) -> CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, clazz.getSimpleName());
     private final DataSource dataSource;
     private final Gson gson;
 
@@ -25,7 +24,7 @@ class QueryExecutor {
     }
 
     <T> void save(T entity) {
-        final String tableName = toSnakeCase.apply(entity.getClass());
+        final String tableName = TableName.from(entity.getClass()).toString();
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + tableName + " (data) VALUES (?::JSONB)")) {
             preparedStatement.setString(1, gson.toJson(entity));
@@ -36,7 +35,7 @@ class QueryExecutor {
     }
 
     <T> List<T> asList(Class<T> type, String fromStatement, List<Object> parameters) {
-        final String tableName = toSnakeCase.apply(type);
+        final String tableName = TableName.from(type).toString();
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement("SELECT id, data FROM " + tableName + " WHERE " + fromStatement)) {
             setParameters(parameters, preparedStatement);
@@ -60,7 +59,7 @@ class QueryExecutor {
     }
 
     <T> int count(Class<T> type, String fromStatement, List<Object> parameters) {
-        final String tableName = toSnakeCase.apply(type);
+        final String tableName = TableName.from(type).toString();
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(*) AS total FROM " + tableName + " WHERE " + fromStatement)) {
             setParameters(parameters, preparedStatement);
@@ -73,7 +72,7 @@ class QueryExecutor {
     }
 
     <T> int delete(Class<T> type, String fromStatement, List<Object> parameters) {
-        final String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, type.getSimpleName());
+        final String tableName = TableName.from(type).toString();
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + tableName + " WHERE " + fromStatement)) {
             setParameters(parameters, preparedStatement);

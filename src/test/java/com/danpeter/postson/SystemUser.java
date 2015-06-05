@@ -1,5 +1,8 @@
 package com.danpeter.postson;
 
+import com.danpeter.postson.annotations.Id;
+import com.danpeter.postson.annotations.Table;
+
 import java.util.UUID;
 
 public class SystemUser {
