@@ -20,6 +20,7 @@ public class IdField {
     }
 
     public static <T> IdField from(Class<T> clazz) {
+        //TODO: Check that there is only one id annotation
         String idField = stream(clazz.getDeclaredFields())
                 .filter(hasIdAnnotation)
                 .findAny()
