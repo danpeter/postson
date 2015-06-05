@@ -2,13 +2,23 @@
 
 A lightweight ORM for storing Java entities as JSONB in Postgres.
 
-Assumes that the entity has a field named 'id' and that the table is named the same as the entity in snake_case.
-
 ## Setup
 ```java
     DataSource source = ...
 
     Datastore datastore = new JsonDatastore(source);
+```
+
+## Creating an entity
+Assumes that the entity has a field named 'id' and that the table is named the same as the entity in snake_case.
+To override this use the @Id and @Table annotations.
+```java
+    @Table(name = "book")
+    public class BookWithIsbn {
+
+        @Id
+        private final String isbn;
+    }
 ```
 
 ## Basic entity operations
