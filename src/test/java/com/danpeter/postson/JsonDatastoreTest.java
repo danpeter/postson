@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 public class JsonDatastoreTest {
 
 
-    public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterström", new SystemUser.Address("Vintervägen", "17777"), 30);
+    public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterstrom", new SystemUser.Address("Vintervagen", "17777"), 30);
     private static Datastore datastore;
     private static PGPoolingDataSource source;
 
@@ -90,6 +90,6 @@ public class JsonDatastoreTest {
         statement.execute("SELECT data from system_user");
         ResultSet resultSet = statement.getResultSet();
         resultSet.next();
-        assertThat(resultSet.getString(1), is("{\"displayName\": \"Dan Peterström\"}"));
+        assertThat(resultSet.getString(1), is("{\"displayName\": \"Dan Peterstrom\"}"));
     }
 }

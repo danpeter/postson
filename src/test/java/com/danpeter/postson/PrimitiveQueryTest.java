@@ -14,7 +14,7 @@ import static org.junit.Assert.assertThat;
 
 public class PrimitiveQueryTest {
 
-    public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterström", new SystemUser.Address("Vintervägen", "17777"), 30);
+    public static final SystemUser DAN_P = new SystemUser(UUID.randomUUID(), "Dan", "Peterstrom", new SystemUser.Address("Vintervagen", "17777"), 30);
     private static Datastore datastore;
     private static PGPoolingDataSource source;
 
@@ -88,17 +88,17 @@ public class PrimitiveQueryTest {
     public void nestedEquals() throws Exception {
         Optional<SystemUser> user = datastore.createPrimitiveQuery(SystemUser.class)
                 .field("address.street")
-                .equal("Vintervägen")
+                .equal("Vintervagen")
                 .singleResult();
         assertThat(user.isPresent(), is(true));
     }
 
     @Test
     public void twoFieldsBothMustMatch() throws Exception {
-        datastore.save(new SystemUser(UUID.randomUUID(), "Daniel", "Karlsson", new SystemUser.Address("Bergvägen", "17717"), 30));
+        datastore.save(new SystemUser(UUID.randomUUID(), "Daniel", "Karlsson", new SystemUser.Address("Bergvagen", "17717"), 30));
         List<SystemUser> users = datastore.createPrimitiveQuery(SystemUser.class)
                 .field("address.street")
-                .equal("Vintervägen")
+                .equal("Vintervagen")
                 .field("firstName")
                 .beginsWithIgnoreCase("Dan")
                 .asList();
